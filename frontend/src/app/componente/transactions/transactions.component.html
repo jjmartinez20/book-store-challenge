@@ -1,0 +1,44 @@
+<app-menu></app-menu>
+<div class="container-fluid">
+  <div class="row mt-4">
+    <div class=" col-sm-4">
+      <div class="form-floating">
+        <select [formControl]="libro" class="form-control" (change)="buscarTransacciones()">
+          <option *ngFor="let libro of libros; let i = index;" [value]="libro.bookId">
+            {{libro.title}}
+          </option>
+        </select>
+        <label>Libro</label>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="form-floating mb-3">
+        <input type="date" [formControl]="from" class="form-control" placeholder="Desde"
+          (change)="buscarTransacciones()" />
+        <label>Desde</label>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="form-floating mb-3">
+        <input type="date" [formControl]="to" class="form-control" placeholder="Hasta"
+          (change)="buscarTransacciones()" />
+        <label>Hasta</label>
+      </div>
+    </div>
+  </div>
+  <p><strong>Total revenue: </strong>{{totalRevenue}}</p>
+  <div class="table-responsive my-3">
+    <table class="table table-striped table-hover table-bordered text-center align-middle">
+      <thead>
+        <th>Fecha</th>
+        <th>Cliente</th>
+      </thead>
+      <tbody>
+        <tr *ngFor="let sale of sales; let i = index;">
+          <td>{{ sale }}</td>
+          <td>{{ customers[i] }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

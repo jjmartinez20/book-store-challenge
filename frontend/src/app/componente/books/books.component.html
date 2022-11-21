@@ -1,0 +1,250 @@
+<app-menu></app-menu>
+<div class="container-fluid">
+  <div class="row mt-4">
+    <div class="col-sm-4">
+      <div class="form-floating mb-3">
+        <input type="text" [formControl]="title" class="form-control" placeholder="Title" maxlength="255"
+          (keyup)="esperarDejarEscribir()" />
+        <label>Title</label>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="form-floating">
+        <select [formControl]="mostrarTodos" class="form-control" (change)="getPage(p)">
+          <option [value]="true">Yes</option>
+          <option [value]="false">No</option>
+        </select>
+        <label>Mostar todos</label>
+      </div>
+    </div>
+    <div class=" col-sm-4">
+      <div class="form-floating">
+        <select [formControl]="tamanioPagina" class="form-control" (change)="getPage(1)">
+          <option [value]="12">Predeterminado (12)</option>
+          <option [value]="3">3</option>
+          <option [value]="5">5</option>
+          <option [value]="7">7</option>
+          <option [value]="10">10</option>
+          <option [value]="20">20</option>
+        </select>
+        <label>Tamaño página</label>
+      </div>
+    </div>
+  </div>
+  <div class="d-flex justify-content-end my-3">
+    <button class="btn btn-primary" (click)="abrirModalBook()">
+      <i class="fa-solid fa-plus"></i>
+    </button>
+  </div>
+  <div class="table-responsive my-3">
+    <table class="table table-striped table-hover table-bordered text-center align-middle">
+      <thead>
+        <th>N°</th>
+        <th>Title</th>
+        <th>Description</th>
+        <th>Stock</th>
+        <th>Sale Price</th>
+        <th>Available</th>
+        <th>Likes</th>
+        <th>Sale</th>
+        <th>Edit</th>
+        <th>Delete</th>
+      </thead>
+      <tbody>
+        <tr *ngFor="let dato of data | paginate : config; let i = index">
+          <td>{{(config.currentPage - 1) * config.itemsPerPage + i + 1}}</td>
+          <td>{{ dato.title }}</td>
+          <td>{{ dato.description }}</td>
+          <td>{{ dato.stock }}</td>
+          <td>{{ dato.salePrice }}</td>
+          <td>
+            <i [className]="
+                dato.available ? 'fa-solid fa-check' : 'fa-solid fa-xmark'
+              " [style]="'color: ' + (dato.available ? 'green' : 'red')"></i>
+          </td>
+          <td style="color: red">
+            <i class="fa-regular fa-heart fa-lg" #refEl (mouseenter)="iconoConRelleno(refEl)"
+              (mouseleave)="iconoSinRelleno(refEl)" (click)="abrirModalLike(dato, refEl)"></i>
+          </td>
+          <td>
+            <button class="btn btn-sm btn-success" (click)="abrirModalVenta(dato)">
+              <i class="fa-solid fa-cart-arrow-down"></i>
+            </button>
+          </td>
+          <td>
+            <button class="btn btn-sm btn-warning text-white" (click)="abrirModalBook(dato)">
+              <i class="fa-solid fa-pen-to-square"></i>
+            </button>
+          </td>
+          <td>
+            <button class="btn btn-sm btn-danger" (click)="eliminarBook(dato)">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="d-flex justify-content-center">
+      <div class="spinner" [ngStyle]="{ hidden: !cargando }"></div>
+      <pagination-controls (pageChange)="getPage($event)" id="server" previousLabel="Anterior" nextLabel="Siguiente"
+        (autoHide)="(true)" (responsive)="(true)"></pagination-controls>
+    </div>
+  </div>
+  <!-------------------------MODAL LIKE------------------------->
+  <div class="modal fade" id="modalLike" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="exampleModalLabel">Like</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="likeForm">
+            <input type="hidden" formControlName="bookId" />
+            <div class="form-floating mb-3">
+              <input type="email" formControlName="customerEmail" class="form-control" placeholder="correo@ejemplo.com"
+                [class.is-invalid]="
+                  likeForm.get('customerEmail')?.touched &&
+                  !likeForm.get('customerEmail')?.valid
+                " />
+              <label for="correoLike">Email cliente</label>
+              <div *ngIf="likeForm.get('customerEmail')?.errors?.['required']" class="invalid-feedback">
+                Debe ingresar el correo del cliente
+              </div>
+              <div *ngIf="likeForm.get('customerEmail')?.errors?.['email']" class="invalid-feedback">
+                Debe ingresar un correo con formato válido
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            Cancelar
+          </button>
+          <button type="button" class="btn btn-primary" [disabled]="!likeForm.valid" (click)="guardarLike()">
+            Guardar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-------------------------MODAL SALE------------------------->
+  <div class="modal fade" id="modalSale" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5">Sale</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="saleForm">
+            <input type="hidden" formControlName="bookId" />
+            <div class="form-floating mb-3">
+              <input type="email" formControlName="customerEmail" class="form-control" placeholder="correo@ejemplo.com"
+                [class.is-invalid]="
+                  likeForm.get('customerEmail')?.touched &&
+                  !likeForm.get('customerEmail')?.valid
+                " />
+              <label for="correoLike">Email cliente</label>
+              <div *ngIf="likeForm.get('customerEmail')?.errors?.['required']" class="invalid-feedback">
+                Debe ingresar el correo del cliente
+              </div>
+              <div *ngIf="likeForm.get('customerEmail')?.errors?.['email']" class="invalid-feedback">
+                Debe ingresar un correo con formato válido
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            Cancelar
+          </button>
+          <button type="button" class="btn btn-primary" [disabled]="!saleForm.valid" (click)="guardarSale()">
+            Guardar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-------------------------MODAL BOOK------------------------->
+  <div class="modal fade" id="modalBook" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5">Book</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="bookForm">
+            <input type="hidden" formControlName="bookId" />
+            <div class="form-floating mb-3">
+              <input type="text" formControlName="title" class="form-control" placeholder="Title" maxlength="255"
+                [class.is-invalid]="
+                  bookForm.get('title')?.touched &&
+                  !bookForm.get('title')?.valid
+                " />
+              <label>Title</label>
+              <div *ngIf="bookForm.get('title')?.errors?.['required']" class="invalid-feedback">
+                Debe ingresar el título del libro
+              </div>
+            </div>
+            <div class="form-floating mb-3">
+              <textarea formControlName="description" class="form-control" placeholder="Description" rows="5" cols="10"
+                [class.is-invalid]="
+                  bookForm.get('description')?.touched &&
+                  !bookForm.get('description')?.valid
+                " style="height:auto;">
+              </textarea>
+              <label>Description</label>
+            </div>
+            <div class="form-floating mb-3">
+              <input type="number" formControlName="stock" class="form-control" placeholder="Stock" [class.is-invalid]="
+                  bookForm.get('stock')?.touched &&
+                  !bookForm.get('stock')?.valid
+                " />
+              <label>Stock</label>
+              <div *ngIf="bookForm.get('stock')?.errors?.['required']" class="invalid-feedback">
+                Debe ingresar la cantidad de stock del libro
+              </div>
+              <div *ngIf="bookForm.get('stock')?.errors?.['min']" class="invalid-feedback">
+                La cantidad debe ser mayor o igual a 0
+              </div>
+            </div>
+            <div class="form-floating mb-3">
+              <input type="number" formControlName="salePrice" class="form-control" placeholder="Sale price"
+                [class.is-invalid]="
+                  bookForm.get('salePrice')?.touched &&
+                  !bookForm.get('salePrice')?.valid
+                " />
+              <label>Sale Price</label>
+              <div *ngIf="bookForm.get('salePrice')?.errors?.['required']" class="invalid-feedback">
+                Debe ingresar el precio de venta del libro
+              </div>
+              <div *ngIf="bookForm.get('salePrice')?.errors?.['min']" class="invalid-feedback">
+                El precio de venta debe ser mayor a 0
+              </div>
+            </div>
+            <div class="form-floating mb-3">
+              <select formControlName="available" class="form-control" [class.is-invalid]="
+              bookForm.get('available')?.touched &&
+              !bookForm.get('available')?.valid
+            ">
+                <option [value]="true">Yes</option>
+                <option [value]="false">No</option>
+              </select>
+              <label>Available</label>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            Cancelar
+          </button>
+          <button type="button" class="btn btn-primary" [disabled]="!bookForm.valid" (click)="guardarBook()">
+            Guardar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

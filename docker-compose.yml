@@ -1,0 +1,12 @@
+version: "3.9"
+services:
+  backend:
+    build: ./backend
+    image: backend-book-challenge
+    ports: 
+      - "8000:8000"
+  fronted:
+    build: ./frontend
+    image: fronted-book-challenge
+    ports: 
+      - "8001:443"
